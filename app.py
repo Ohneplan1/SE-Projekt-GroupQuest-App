@@ -7,16 +7,22 @@ from database import (
     authenticate_user,
     create_shopping_list,
     create_user,
+    delete_item,
+    delete_shopping_list,
     get_items,
     get_list_for_user,
     get_shopping_lists,
     init_db,
     set_item_done,
+    update_item,
+    update_shopping_list,
 )
 
 
 st.set_page_config(page_title="GroupQuest Einkaufsapp", page_icon="GQ", layout="centered")
 init_db()
+
+CATEGORIES = ["Obst & Gemuese", "Kuehlregal", "Backwaren", "Getraenke", "Drogerie", "Sonstiges"]
 
 
 def get_current_user() -> dict | None:
@@ -35,7 +41,7 @@ def logout_user() -> None:
 
 def render_auth() -> None:
     st.title("GroupQuest Einkaufsapp")
-    st.caption("Sprint-1-Prototyp mit Streamlit und SQLite")
+    st.caption("Sprint-2-Prototyp mit Streamlit und SQLite")
 
     login_tab, register_tab = st.tabs(["Login", "Registrieren"])
 
@@ -119,6 +125,68 @@ def render_list_selector(user: dict) -> list:
     return lists
 
 
+def render_list_actions(user: dict, list_id: int, current_name: str) -> None:
+    st.subheader("Einkaufsliste verwalten")
+    next_name = st.text_input("Neuer Listenname", value=current_name, key=f"rename-list-{list_id}")
+    if st.button("Liste umbenennen", key=f"rename-list-button-{list_id}"):
+        if next_name.strip():
+            update_shopping_list(user["id"], list_id, next_name)
+            st.success("Einkaufsliste wurde umbenannt.")
+            st.rerun()
+        else:
+            st.warning("Der Listenname darf nicht leer sein.")
+
+    confirm_delete = st.checkbox(
+        "Ich moechte diese Einkaufsliste wirklich loeschen.",
+        key=f"confirm-delete-list-{list_id}",
+    )
+    if st.button("Liste loeschen", disabled=not confirm_delete):
+        delete_shopping_list(user["id"], list_id)
+        st.session_state.active_list_id = None
+        st.success("Einkaufsliste wurde geloescht.")
+        st.rerun()
+
+
+def item_label(item) -> str:
+    label = item["name"]
+    if item["quantity"]:
+        label = f"{label} ({item['quantity']})"
+    if item["category"]:
+        label = f"{label} - {item['category']}"
+    return label
+
+
+def render_item_editor(item) -> None:
+    with st.expander(f"Bearbeiten: {item['name']}"):
+        with st.form(f"edit-item-{item['id']}"):
+            item_name = st.text_input("Artikelname", value=item["name"])
+            quantity = st.text_input("Menge", value=item["quantity"] or "")
+            category_options = [""] + CATEGORIES
+            current_category = item["category"] or ""
+            category = st.selectbox(
+                "Kategorie",
+                options=category_options,
+                index=category_options.index(current_category)
+                if current_category in category_options
+                else 0,
+                format_func=lambda value: "Keine Kategorie" if value == "" else value,
+            )
+            submitted = st.form_submit_button("Artikel speichern")
+
+        if submitted:
+            if item_name.strip():
+                update_item(item["id"], item_name, quantity, category)
+                st.success("Artikel wurde aktualisiert.")
+                st.rerun()
+            else:
+                st.warning("Der Artikelname darf nicht leer sein.")
+
+        if st.button("Artikel loeschen", key=f"delete-item-{item['id']}"):
+            delete_item(item["id"])
+            st.success("Artikel wurde geloescht.")
+            st.rerun()
+
+
 def render_items(user: dict, list_id: int) -> None:
     shopping_list = get_list_for_user(user["id"], list_id)
     if not shopping_list:
@@ -127,22 +195,40 @@ def render_items(user: dict, list_id: int) -> None:
 
     st.divider()
     st.header(shopping_list["name"])
+    render_list_actions(user, list_id, shopping_list["name"])
 
     with st.form("new-item-form", clear_on_submit=True):
         col_name, col_quantity = st.columns([2, 1])
         item_name = col_name.text_input("Artikel", placeholder="z. B. Milch")
         quantity = col_quantity.text_input("Menge", placeholder="z. B. 2 l")
+        category = st.selectbox(
+            "Kategorie",
+            options=[""] + CATEGORIES,
+            format_func=lambda value: "Keine Kategorie" if value == "" else value,
+        )
         submitted = st.form_submit_button("Artikel hinzufuegen")
 
     if submitted:
         if item_name.strip():
-            add_item(list_id, item_name, quantity)
+            add_item(list_id, item_name, quantity, category)
             st.success("Artikel hinzugefuegt.")
             st.rerun()
         else:
             st.warning("Bitte gib einen Artikelnamen ein.")
 
     items = get_items(list_id)
+    filter_choice = st.radio(
+        "Artikel filtern",
+        ["Alle", "Offen", "Erledigt"],
+        horizontal=True,
+    )
+    visible_items = [
+        item
+        for item in items
+        if filter_choice == "Alle"
+        or (filter_choice == "Offen" and not item["is_done"])
+        or (filter_choice == "Erledigt" and item["is_done"])
+    ]
     open_items = [item for item in items if not item["is_done"]]
     done_items = [item for item in items if item["is_done"]]
 
@@ -151,24 +237,15 @@ def render_items(user: dict, list_id: int) -> None:
     stat_cols[1].metric("Erledigt", len(done_items))
     stat_cols[2].metric("Gesamt", len(items))
 
-    st.subheader("Offene Artikel")
-    if not open_items:
-        st.info("Keine offenen Artikel.")
-    for item in open_items:
-        label = item["name"] if not item["quantity"] else f"{item['name']} ({item['quantity']})"
-        if st.checkbox(label, value=False, key=f"open-{item['id']}"):
-            set_item_done(item["id"], True)
+    st.subheader("Artikel")
+    if not visible_items:
+        st.info("Keine Artikel fuer diesen Filter.")
+    for item in visible_items:
+        checked = st.checkbox(item_label(item), value=bool(item["is_done"]), key=f"item-{item['id']}")
+        if checked != bool(item["is_done"]):
+            set_item_done(item["id"], checked)
             st.rerun()
-
-    with st.expander("Erledigte Artikel", expanded=bool(done_items)):
-        if not done_items:
-            st.caption("Noch nichts abgehakt.")
-        for item in done_items:
-            label = item["name"] if not item["quantity"] else f"{item['name']} ({item['quantity']})"
-            checked = st.checkbox(label, value=True, key=f"done-{item['id']}")
-            if not checked:
-                set_item_done(item["id"], False)
-                st.rerun()
+        render_item_editor(item)
 
 
 def main() -> None:
@@ -179,7 +256,7 @@ def main() -> None:
 
     render_sidebar(user)
     st.title("Einkauf planen")
-    st.caption("Sprint 1: Registrierung, Login, Listen, Artikel und Fortschritt.")
+    st.caption("Sprint 2: Listen und Artikel bearbeiten, loeschen, kategorisieren und filtern.")
     lists = render_list_selector(user)
     active_list_id = st.session_state.get("active_list_id")
     if lists and active_list_id:

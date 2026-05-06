@@ -41,12 +41,22 @@ def init_db() -> None:
                 list_id INTEGER NOT NULL,
                 name TEXT NOT NULL,
                 quantity TEXT,
+                category TEXT,
                 is_done INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (list_id) REFERENCES shopping_lists(id) ON DELETE CASCADE
             );
             """
         )
+        ensure_column(conn, "items", "category", "TEXT")
+
+
+def ensure_column(conn: sqlite3.Connection, table_name: str, column_name: str, definition: str) -> None:
+    columns = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    if any(column["name"] == column_name for column in columns):
+        return
+
+    conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {definition}")
 
 
 def now_iso() -> str:
@@ -103,6 +113,33 @@ def create_shopping_list(user_id: int, name: str) -> None:
         )
 
 
+def update_shopping_list(user_id: int, list_id: int, name: str) -> None:
+    name = name.strip()
+    if not name:
+        return
+
+    with get_connection() as conn:
+        conn.execute(
+            """
+            UPDATE shopping_lists
+            SET name = ?
+            WHERE id = ? AND user_id = ?
+            """,
+            (name, list_id, user_id),
+        )
+
+
+def delete_shopping_list(user_id: int, list_id: int) -> None:
+    with get_connection() as conn:
+        conn.execute(
+            """
+            DELETE FROM shopping_lists
+            WHERE id = ? AND user_id = ?
+            """,
+            (list_id, user_id),
+        )
+
+
 def get_shopping_lists(user_id: int) -> list[sqlite3.Row]:
     with get_connection() as conn:
         return conn.execute(
@@ -135,7 +172,7 @@ def get_list_for_user(user_id: int, list_id: int) -> sqlite3.Row | None:
         ).fetchone()
 
 
-def add_item(list_id: int, name: str, quantity: str) -> None:
+def add_item(list_id: int, name: str, quantity: str, category: str) -> None:
     name = name.strip()
     if not name:
         return
@@ -143,10 +180,10 @@ def add_item(list_id: int, name: str, quantity: str) -> None:
     with get_connection() as conn:
         conn.execute(
             """
-            INSERT INTO items (list_id, name, quantity, is_done, created_at)
-            VALUES (?, ?, ?, 0, ?)
+            INSERT INTO items (list_id, name, quantity, category, is_done, created_at)
+            VALUES (?, ?, ?, ?, 0, ?)
             """,
-            (list_id, name, quantity.strip(), now_iso()),
+            (list_id, name, quantity.strip(), category.strip(), now_iso()),
         )
 
 
@@ -154,13 +191,40 @@ def get_items(list_id: int) -> list[sqlite3.Row]:
     with get_connection() as conn:
         return conn.execute(
             """
-            SELECT id, name, quantity, is_done, created_at
+            SELECT id, name, quantity, category, is_done, created_at
             FROM items
             WHERE list_id = ?
-            ORDER BY is_done ASC, created_at DESC
+            ORDER BY is_done ASC, category ASC, created_at DESC
             """,
             (list_id,),
         ).fetchall()
+
+
+def update_item(item_id: int, name: str, quantity: str, category: str) -> None:
+    name = name.strip()
+    if not name:
+        return
+
+    with get_connection() as conn:
+        conn.execute(
+            """
+            UPDATE items
+            SET name = ?, quantity = ?, category = ?
+            WHERE id = ?
+            """,
+            (name, quantity.strip(), category.strip(), item_id),
+        )
+
+
+def delete_item(item_id: int) -> None:
+    with get_connection() as conn:
+        conn.execute(
+            """
+            DELETE FROM items
+            WHERE id = ?
+            """,
+            (item_id,),
+        )
 
 
 def set_item_done(item_id: int, is_done: bool) -> None:

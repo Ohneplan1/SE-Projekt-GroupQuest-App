@@ -25,6 +25,7 @@ Die App hilft Nutzer:innen dabei, Einkaufslisten anzulegen, Artikel mit Mengen z
 - Issues: [GitHub Issues](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues)
 - Milestones: [GitHub Milestones](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/milestones)
 - Sprint-1-Issues: [Label sprint-1](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues?q=label%3Asprint-1)
+- Sprint-2-Issues: [Label sprint-2](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues?q=label%3Asprint-2)
 
 Hinweis: Ein GitHub Project wurde in der aktuellen GitHub-Abfrage nicht gefunden. Die Backlog-Verwaltung ist aber ueber Issues, Labels und Milestones nachvollziehbar dokumentiert.
 
@@ -123,6 +124,7 @@ requirements.txt
 README.md
 Einkaufsapp_Backlog.md
 Sprint_1_Review_Retro.md
+Sprint_2_Review_Retro.md
 Projektbericht.md
 ```
 
@@ -145,25 +147,59 @@ streamlit run app.py
 
 ## 8. Aktueller Stand
 
-Der Sprint-1-Prototyp ist lauffaehig. Nutzer:innen koennen:
+Der Sprint-2-Prototyp ist lauffaehig. Nutzer:innen koennen:
 
 - sich registrieren
 - sich einloggen
 - Einkaufslisten erstellen
 - Einkaufslisten anzeigen
+- Einkaufslisten umbenennen
+- Einkaufslisten loeschen
 - Artikel mit Menge hinzufuegen
+- Artikel kategorisieren
+- Artikel bearbeiten
+- Artikel loeschen
 - Artikel abhaken
+- Artikel nach Status filtern
 - offene, erledigte und gesamte Artikel sehen
 
-## 9. Naechster Sprint
+## 9. Sprint 2
 
-Empfohlener Sprint-2-Scope:
+### Sprint-Ziel
 
-- [US6](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/6): Einkaufsliste umbenennen
-- [US7](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/7): Einkaufsliste loeschen
-- [US11](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/11): Artikel bearbeiten
-- [US12](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/12): Artikel loeschen
-- [US16](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/16): Artikel kategorisieren
-- [US18](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/18): Artikel filtern
+Nutzer:innen koennen Einkaufslisten und Artikel nachtraeglich pflegen, strukturieren und filtern.
+
+### Sprint-Backlog
+
+| Issue | User Story | Status |
+|---|---|---|
+| [US6](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/6) | Einkaufsliste umbenennen | erledigt |
+| [US7](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/7) | Einkaufsliste loeschen | erledigt |
+| [US11](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/11) | Artikel bearbeiten | erledigt |
+| [US12](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/12) | Artikel loeschen | erledigt |
+| [US16](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/16) | Artikel kategorisieren | erledigt |
+| [US18](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/18) | Artikel filtern | erledigt |
+
+### Sprint Review
+
+Im Sprint Review wurde gezeigt, dass Listen umbenannt und geloescht werden koennen. Artikel koennen mit Kategorien erstellt, spaeter bearbeitet, geloescht und nach Status gefiltert werden.
+
+### Retrospektive
+
+Gut gelaufen:
+
+- Der Funktionsumfang wurde erweitert, ohne neue externe Services einzufuehren.
+- Die App bleibt mit Streamlit.io kompatibel.
+
+Verbesserung:
+
+- Der naechste Sprint sollte gezielt Statistik und optionale Priorisierung ausbauen.
+
+## 10. Naechster Sprint
+
+Empfohlener Sprint-3-Scope:
+
+- [US17](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/17): Artikel als wichtig markieren
+- [US20](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues/20): Einfache Einkaufsstatistik anzeigen
 
 Gruppenfunktionen sollten erst spaeter umgesetzt werden, da sie fuer SQLite/Streamlit mehr Abstimmung und Testaufwand brauchen.
