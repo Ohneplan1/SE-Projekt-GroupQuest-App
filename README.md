@@ -2,6 +2,14 @@
 
 Streamlit/SQLite-Prototyp fuer den ersten Sprint der Einkaufsapp.
 
+## Projektdokumentation
+
+- [Projektbericht](Projektbericht.md)
+- [Projektbacklog](Einkaufsapp_Backlog.md)
+- [Sprint 1 Review und Retrospektive](Sprint_1_Review_Retro.md)
+- [GitHub Issues](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/issues)
+- [GitHub Milestones](https://github.com/Ohneplan1/SE-Projekt-GroupQuest-App/milestones)
+
 ## Sprint-1-Umfang
 
 - Registrierung
